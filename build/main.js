@@ -21,6 +21,10 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
@@ -366,16 +370,11 @@ var require_colorsys = __commonJS({
       return (degrees % 360 + 360) % 360;
     }
     function _hue2Rgb(p, q, t) {
-      if (t < 0)
-        t += 1;
-      if (t > 1)
-        t -= 1;
-      if (t < 1 / 6)
-        return p + (q - p) * 6 * t;
-      if (t < 1 / 2)
-        return q;
-      if (t < 2 / 3)
-        return p + (q - p) * (2 / 3 - t) * 6;
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
       return p;
     }
     colorsys2.any2Hsl = function(color) {
@@ -542,7 +541,7 @@ var require_moment = __commonJS({
   "node_modules/moment/moment.js"(exports, module2) {
     (function(global2, factory) {
       typeof exports === "object" && typeof module2 !== "undefined" ? module2.exports = factory() : typeof define === "function" && define.amd ? define(factory) : global2.moment = factory();
-    })(exports, function() {
+    })(exports, (function() {
       "use strict";
       var hookCallback;
       function hooks() {
@@ -722,7 +721,7 @@ var require_moment = __commonJS({
         copyConfig(this, config);
         this._d = new Date(config._d != null ? config._d.getTime() : NaN);
         if (!this.isValid()) {
-          this._d = new Date(NaN);
+          this._d = /* @__PURE__ */ new Date(NaN);
         }
         if (updateInProgress === false) {
           updateInProgress = true;
@@ -1241,8 +1240,13 @@ var require_moment = __commonJS({
             return void (isUTC ? d.setUTCHours(value) : d.setHours(value));
           case "Date":
             return void (isUTC ? d.setUTCDate(value) : d.setDate(value));
+          // case 'Day': // Not real
+          //    return void (isUTC ? d.setUTCDay(value) : d.setDay(value));
+          // case 'Month': // Not used because we need to pass two variables
+          //     return void (isUTC ? d.setUTCMonth(value) : d.setMonth(value));
           case "FullYear":
             break;
+          // See below ...
           default:
             return;
         }
@@ -1596,7 +1600,9 @@ var require_moment = __commonJS({
       }
       var defaultLocaleWeek = {
         dow: 0,
+        // Sunday is the first day of the week.
         doy: 6
+        // The week that contains Jan 6th is the first week of the year.
       };
       function localeFirstDayOfWeek() {
         return this._week.dow;
@@ -2357,7 +2363,7 @@ var require_moment = __commonJS({
       function configFromString(config) {
         var matched = aspNetJsonRegex.exec(config._i);
         if (matched !== null) {
-          config._d = new Date(+matched[1]);
+          config._d = /* @__PURE__ */ new Date(+matched[1]);
           return;
         }
         configFromISO(config);
@@ -2381,7 +2387,7 @@ var require_moment = __commonJS({
       hooks.createFromInputFallback = deprecate(
         "value provided is not in a recognized RFC2822 or ISO format. moment construction falls back to js Date(), which is not reliable across all browsers and versions. Non RFC2822/ISO date formats are discouraged. Please refer to http://momentjs.com/guides/#/warnings/js-date/ for more info.",
         function(config) {
-          config._d = new Date(config._i + (config._useUTC ? " UTC" : ""));
+          config._d = /* @__PURE__ */ new Date(config._i + (config._useUTC ? " UTC" : ""));
         }
       );
       function defaults(a, b, c) {
@@ -2580,7 +2586,7 @@ var require_moment = __commonJS({
         var tempConfig, bestMoment, scoreToBeat, i, currentScore, validFormatFound, bestFormatIsValid = false, configfLen = config._f.length;
         if (configfLen === 0) {
           getParsingFlags(config).invalidFormat = true;
-          config._d = new Date(NaN);
+          config._d = /* @__PURE__ */ new Date(NaN);
           return;
         }
         for (i = 0; i < configfLen; i++) {
@@ -2752,7 +2758,7 @@ var require_moment = __commonJS({
         return pickBy("isAfter", args);
       }
       var now = function() {
-        return Date.now ? Date.now() : +new Date();
+        return Date.now ? Date.now() : +/* @__PURE__ */ new Date();
       };
       var ordering = [
         "year",
@@ -2793,7 +2799,9 @@ var require_moment = __commonJS({
       function Duration(duration) {
         var normalizedInput = normalizeObjectUnits(duration), years2 = normalizedInput.year || 0, quarters = normalizedInput.quarter || 0, months2 = normalizedInput.month || 0, weeks2 = normalizedInput.week || normalizedInput.isoWeek || 0, days2 = normalizedInput.day || 0, hours2 = normalizedInput.hour || 0, minutes2 = normalizedInput.minute || 0, seconds2 = normalizedInput.second || 0, milliseconds2 = normalizedInput.millisecond || 0;
         this._isValid = isDurationValid(normalizedInput);
-        this._milliseconds = +milliseconds2 + seconds2 * 1e3 + minutes2 * 6e4 + hours2 * 1e3 * 60 * 60;
+        this._milliseconds = +milliseconds2 + seconds2 * 1e3 + // 1000
+        minutes2 * 6e4 + // 1000 * 60
+        hours2 * 1e3 * 60 * 60;
         this._days = +days2 + weeks2 * 7;
         this._months = +months2 + quarters * 3 + years2 * 12;
         this._data = {};
@@ -3002,6 +3010,7 @@ var require_moment = __commonJS({
             m: toInt(match[MINUTE]) * sign2,
             s: toInt(match[SECOND]) * sign2,
             ms: toInt(absRound(match[MILLISECOND] * 1e3)) * sign2
+            // the millisecond decimal point is included in the match
           };
         } else if (match = isoRegex.exec(input)) {
           sign2 = match[1] === "-" ? -1 : 1;
@@ -3264,18 +3273,23 @@ var require_moment = __commonJS({
           case "second":
             output = (this - that) / 1e3;
             break;
+          // 1000
           case "minute":
             output = (this - that) / 6e4;
             break;
+          // 1000 * 60
           case "hour":
             output = (this - that) / 36e5;
             break;
+          // 1000 * 60 * 60
           case "day":
             output = (this - that - zoneDelta) / 864e5;
             break;
+          // 1000 * 60 * 60 * 24, negate dst
           case "week":
             output = (this - that - zoneDelta) / 6048e5;
             break;
+          // 1000 * 60 * 60 * 24 * 7, negate dst
           default:
             output = this - that;
         }
@@ -3990,7 +4004,7 @@ var require_moment = __commonJS({
       proto.toISOString = toISOString;
       proto.inspect = inspect;
       if (typeof Symbol !== "undefined" && Symbol.for != null) {
-        proto[Symbol.for("nodejs.util.inspect.custom")] = function() {
+        proto[/* @__PURE__ */ Symbol.for("nodejs.util.inspect.custom")] = function() {
           return "Moment<" + this.format() + ">";
         };
       }
@@ -4287,6 +4301,7 @@ var require_moment = __commonJS({
               return days2 * 1440 + milliseconds2 / 6e4;
             case "second":
               return days2 * 86400 + milliseconds2 / 1e3;
+            // Math.floor prevents floating point math errors here
             case "millisecond":
               return Math.floor(days2 * 864e5) + milliseconds2;
             default:
@@ -4318,12 +4333,19 @@ var require_moment = __commonJS({
       }
       var round = Math.round, thresholds = {
         ss: 44,
+        // a few seconds to seconds
         s: 45,
+        // seconds to minute
         m: 45,
+        // minutes to hour
         h: 22,
+        // hours to day
         d: 26,
+        // days to month/week
         w: null,
+        // weeks to month
         M: 11
+        // months to year
       };
       function substituteTimeAgo(string, number, withoutSuffix, isFuture, locale2) {
         return locale2.relativeTime(number || 1, !!withoutSuffix, string, isFuture);
@@ -4491,17 +4513,26 @@ var require_moment = __commonJS({
       hooks.prototype = proto;
       hooks.HTML5_FMT = {
         DATETIME_LOCAL: "YYYY-MM-DDTHH:mm",
+        // <input type="datetime-local" />
         DATETIME_LOCAL_SECONDS: "YYYY-MM-DDTHH:mm:ss",
+        // <input type="datetime-local" step="1" />
         DATETIME_LOCAL_MS: "YYYY-MM-DDTHH:mm:ss.SSS",
+        // <input type="datetime-local" step="0.001" />
         DATE: "YYYY-MM-DD",
+        // <input type="date" />
         TIME: "HH:mm",
+        // <input type="time" />
         TIME_SECONDS: "HH:mm:ss",
+        // <input type="time" step="1" />
         TIME_MS: "HH:mm:ss.SSS",
+        // <input type="time" step="0.001" />
         WEEK: "GGGG-[W]WW",
+        // <input type="week" />
         MONTH: "YYYY-MM"
+        // <input type="month" />
       };
       return hooks;
-    });
+    }));
   }
 });
 
@@ -4528,15 +4559,13 @@ var require_jsonpath = __commonJS({
       }
     })(function() {
       var define2, module3, exports2;
-      return function e(t, n, r) {
+      return (function e(t, n, r) {
         function s(o2, u) {
           if (!n[o2]) {
             if (!t[o2]) {
               var a = typeof require == "function" && require;
-              if (!u && a)
-                return a(o2, true);
-              if (i)
-                return i(o2, true);
+              if (!u && a) return a(o2, true);
+              if (i) return i(o2, true);
               var f = new Error("Cannot find module '" + o2 + "'");
               throw f.code = "MODULE_NOT_FOUND", f;
             }
@@ -4549,10 +4578,9 @@ var require_jsonpath = __commonJS({
           return n[o2].exports;
         }
         var i = typeof require == "function" && require;
-        for (var o = 0; o < r.length; o++)
-          s(r[o]);
+        for (var o = 0; o < r.length; o++) s(r[o]);
         return s;
-      }({ "./aesprim": [function(require2, module4, exports3) {
+      })({ "./aesprim": [function(require2, module4, exports3) {
         (function(root, factory) {
           "use strict";
           if (typeof define2 === "function" && define2.amd) {
@@ -4599,6 +4627,7 @@ var require_jsonpath = __commonJS({
             "delete",
             "throw",
             "void",
+            // assignment operators
             "=",
             "+=",
             "-=",
@@ -4612,6 +4641,7 @@ var require_jsonpath = __commonJS({
             "|=",
             "^=",
             ",",
+            // binary/unary operators
             "+",
             "-",
             "*",
@@ -4747,10 +4777,19 @@ var require_jsonpath = __commonJS({
             return ch === 10 || ch === 13 || ch === 8232 || ch === 8233;
           }
           function isIdentifierStart(ch) {
-            return ch == 64 || ch === 36 || ch === 95 || ch >= 65 && ch <= 90 || ch >= 97 && ch <= 122 || ch === 92 || ch >= 128 && Regex.NonAsciiIdentifierStart.test(String.fromCharCode(ch));
+            return ch == 64 || ch === 36 || ch === 95 || // $ (dollar) and _ (underscore)
+            ch >= 65 && ch <= 90 || // A..Z
+            ch >= 97 && ch <= 122 || // a..z
+            ch === 92 || // \ (backslash)
+            ch >= 128 && Regex.NonAsciiIdentifierStart.test(String.fromCharCode(ch));
           }
           function isIdentifierPart(ch) {
-            return ch === 36 || ch === 95 || ch >= 65 && ch <= 90 || ch >= 97 && ch <= 122 || ch >= 48 && ch <= 57 || ch === 92 || ch >= 128 && Regex.NonAsciiIdentifierPart.test(String.fromCharCode(ch));
+            return ch === 36 || ch === 95 || // $ (dollar) and _ (underscore)
+            ch >= 65 && ch <= 90 || // A..Z
+            ch >= 97 && ch <= 122 || // a..z
+            ch >= 48 && ch <= 57 || // 0..9
+            ch === 92 || // \ (backslash)
+            ch >= 128 && Regex.NonAsciiIdentifierPart.test(String.fromCharCode(ch));
           }
           function isFutureReservedWord(id) {
             switch (id) {
@@ -5059,17 +5098,29 @@ var require_jsonpath = __commonJS({
           function scanPunctuator() {
             var start = index, code = source.charCodeAt(index), code2, ch1 = source[index], ch2, ch3, ch4;
             switch (code) {
+              // Check for most common single-character punctuators.
               case 46:
+              // . dot
               case 40:
+              // ( open bracket
               case 41:
+              // ) close bracket
               case 59:
+              // ; semicolon
               case 44:
+              // , comma
               case 123:
+              // { open curly brace
               case 125:
+              // } close curly brace
               case 91:
+              // [
               case 93:
+              // ]
               case 58:
+              // :
               case 63:
+              // ?
               case 126:
                 ++index;
                 if (extra.tokenize) {
@@ -5092,14 +5143,23 @@ var require_jsonpath = __commonJS({
                 if (code2 === 61) {
                   switch (code) {
                     case 43:
+                    // +
                     case 45:
+                    // -
                     case 47:
+                    // /
                     case 60:
+                    // <
                     case 62:
+                    // >
                     case 94:
+                    // ^
                     case 124:
+                    // |
                     case 37:
+                    // %
                     case 38:
+                    // &
                     case 42:
                       index += 2;
                       return {
@@ -5111,6 +5171,7 @@ var require_jsonpath = __commonJS({
                         end: index
                       };
                     case 33:
+                    // !
                     case 61:
                       index += 2;
                       if (source.charCodeAt(index) === 61) {
@@ -5220,6 +5281,19 @@ var require_jsonpath = __commonJS({
               end: index
             };
           }
+          function isImplicitOctalLiteral() {
+            var i, ch;
+            for (i = index + 1; i < length; ++i) {
+              ch = source[i];
+              if (ch === "8" || ch === "9") {
+                return false;
+              }
+              if (!isOctalDigit(ch)) {
+                return true;
+              }
+            }
+            return true;
+          }
           function scanNumericLiteral() {
             var number, start, ch;
             ch = source[index];
@@ -5238,10 +5312,9 @@ var require_jsonpath = __commonJS({
                   return scanHexLiteral(start);
                 }
                 if (isOctalDigit(ch)) {
-                  return scanOctalLiteral(start);
-                }
-                if (ch && isDecimalDigit(ch.charCodeAt(0))) {
-                  throwError({}, Messages.UnexpectedToken, "ILLEGAL");
+                  if (isImplicitOctalLiteral()) {
+                    return scanOctalLiteral(start);
+                  }
                 }
               }
               while (isDecimalDigit(source.charCodeAt(index))) {
@@ -5567,7 +5640,7 @@ var require_jsonpath = __commonJS({
               }
               return collectRegex();
             }
-            if (prevToken.type === "Keyword") {
+            if (prevToken.type === "Keyword" && prevToken.value !== "this") {
               return collectRegex();
             }
             return scanPunctuator();
@@ -6112,7 +6185,7 @@ var require_jsonpath = __commonJS({
             return op === "=" || op === "*=" || op === "/=" || op === "%=" || op === "+=" || op === "-=" || op === "<<=" || op === ">>=" || op === ">>>=" || op === "&=" || op === "^=" || op === "|=";
           }
           function consumeSemicolon() {
-            var line;
+            var line, oldIndex = index, oldLineNumber = lineNumber, oldLineStart = lineStart, oldLookahead = lookahead;
             if (source.charCodeAt(index) === 59 || match(";")) {
               lex();
               return;
@@ -6120,6 +6193,10 @@ var require_jsonpath = __commonJS({
             line = lineNumber;
             skipComment();
             if (lineNumber !== line) {
+              index = oldIndex;
+              lineNumber = oldLineNumber;
+              lineStart = oldLineStart;
+              lookahead = oldLookahead;
               return;
             }
             if (lookahead.type !== Token.EOF && !match("}")) {
@@ -6351,12 +6428,10 @@ var require_jsonpath = __commonJS({
             return delegate.markEnd(delegate.createNewExpression(callee, args), startToken);
           }
           function parseLeftHandSideExpressionAllowCall() {
-            var previousAllowIn, expr, args, property, startToken;
+            var expr, args, property, startToken, previousAllowIn = state.allowIn;
             startToken = lookahead;
-            previousAllowIn = state.allowIn;
             state.allowIn = true;
             expr = matchKeyword("new") ? parseNewExpression() : parsePrimaryExpression();
-            state.allowIn = previousAllowIn;
             for (; ; ) {
               if (match(".")) {
                 property = parseNonComputedMember();
@@ -6372,14 +6447,14 @@ var require_jsonpath = __commonJS({
               }
               delegate.markEnd(expr, startToken);
             }
+            state.allowIn = previousAllowIn;
             return expr;
           }
           function parseLeftHandSideExpression() {
-            var previousAllowIn, expr, property, startToken;
+            var expr, property, startToken;
+            assert(state.allowIn, "callee of new expression always allow in keyword.");
             startToken = lookahead;
-            previousAllowIn = state.allowIn;
             expr = matchKeyword("new") ? parseNewExpression() : parsePrimaryExpression();
-            state.allowIn = previousAllowIn;
             while (match(".") || match("[")) {
               if (match("[")) {
                 property = parseComputedMember();
@@ -6728,7 +6803,7 @@ var require_jsonpath = __commonJS({
             return delegate.markEnd(delegate.createVariableDeclaration(declarations, token.value), startToken);
           }
           function parseForStatement() {
-            var init, test, update, left, right, body, oldInIteration;
+            var init, test, update, left, right, body, oldInIteration, previousAllowIn = state.allowIn;
             init = test = update = null;
             expectKeyword("for");
             expect("(");
@@ -6738,7 +6813,7 @@ var require_jsonpath = __commonJS({
               if (matchKeyword("var") || matchKeyword("let")) {
                 state.allowIn = false;
                 init = parseForVariableDeclaration();
-                state.allowIn = true;
+                state.allowIn = previousAllowIn;
                 if (init.declarations.length === 1 && matchKeyword("in")) {
                   lex();
                   left = init;
@@ -6748,7 +6823,7 @@ var require_jsonpath = __commonJS({
               } else {
                 state.allowIn = false;
                 init = parseExpression();
-                state.allowIn = true;
+                state.allowIn = previousAllowIn;
                 if (matchKeyword("in")) {
                   if (!isLeftHandSide(init)) {
                     throwErrorTolerant({}, Messages.InvalidLHSInForIn);
@@ -7425,10 +7500,10 @@ var require_jsonpath = __commonJS({
             }
             return program;
           }
-          exports4.version = "1.2.2";
+          exports4.version = "1.2.5";
           exports4.tokenize = tokenize;
           exports4.parse = parse;
-          exports4.Syntax = function() {
+          exports4.Syntax = (function() {
             var name, types = {};
             if (typeof Object.create === "function") {
               types = /* @__PURE__ */ Object.create(null);
@@ -7442,11 +7517,11 @@ var require_jsonpath = __commonJS({
               Object.freeze(types);
             }
             return types;
-          }();
+          })();
         });
       }, {}], 1: [function(require2, module4, exports3) {
         (function(process) {
-          var parser = function() {
+          var parser = (function() {
             var parser2 = {
               trace: function trace() {
               },
@@ -7719,13 +7794,11 @@ var require_jsonpath = __commonJS({
                 this._stash = [];
               },
               set: function(props) {
-                for (var k in props)
-                  this._node[k] = props[k];
+                for (var k in props) this._node[k] = props[k];
                 return this._node;
               },
               node: function(obj) {
-                if (arguments.length)
-                  this._node = obj;
+                if (arguments.length) this._node = obj;
                 return this._node;
               },
               push: function() {
@@ -7742,7 +7815,7 @@ var require_jsonpath = __commonJS({
                 return _nodes;
               }
             };
-            var lexer = function() {
+            var lexer = /* @__PURE__ */ (function() {
               var lexer2 = {
                 EOF: 1,
                 parseError: function parseError(str, hash) {
@@ -7752,6 +7825,7 @@ var require_jsonpath = __commonJS({
                     throw new Error(str);
                   }
                 },
+                // resets the lexer, sets new input
                 setInput: function(input) {
                   this._input = input;
                   this._more = this._backtrack = this.done = false;
@@ -7770,6 +7844,7 @@ var require_jsonpath = __commonJS({
                   this.offset = 0;
                   return this;
                 },
+                // consumes and returns one char from the input
                 input: function() {
                   var ch = this._input[0];
                   this.yytext += ch;
@@ -7790,6 +7865,7 @@ var require_jsonpath = __commonJS({
                   this._input = this._input.slice(1);
                   return ch;
                 },
+                // unshifts one char (or a string) into the input
                 unput: function(ch) {
                   var len = ch.length;
                   var lines = ch.split(/(?:\r\n?|\n)/g);
@@ -7815,10 +7891,12 @@ var require_jsonpath = __commonJS({
                   this.yyleng = this.yytext.length;
                   return this;
                 },
+                // When called from action, caches matched text and appends it on next action
                 more: function() {
                   this._more = true;
                   return this;
                 },
+                // When called from action, signals the lexer that this rule fails to match the input, so the next matching rule (regex) should be tested instead.
                 reject: function() {
                   if (this.options.backtrack_lexer) {
                     this._backtrack = true;
@@ -7831,13 +7909,16 @@ var require_jsonpath = __commonJS({
                   }
                   return this;
                 },
+                // retain first n characters of the match
                 less: function(n) {
                   this.unput(this.match.slice(n));
                 },
+                // displays already matched input, i.e. for error messages
                 pastInput: function() {
                   var past = this.matched.substr(0, this.matched.length - this.match.length);
                   return (past.length > 20 ? "..." : "") + past.substr(-20).replace(/\n/g, "");
                 },
+                // displays upcoming input, i.e. for error messages
                 upcomingInput: function() {
                   var next = this.match;
                   if (next.length < 20) {
@@ -7845,11 +7926,13 @@ var require_jsonpath = __commonJS({
                   }
                   return (next.substr(0, 20) + (next.length > 20 ? "..." : "")).replace(/\n/g, "");
                 },
+                // displays the character position where the lexing error occurred, i.e. for error messages
                 showPosition: function() {
                   var pre = this.pastInput();
                   var c = new Array(pre.length + 1).join("-");
                   return pre + this.upcomingInput() + "\n" + c + "^";
                 },
+                // test the lexed token: return FALSE when not a match, otherwise return token
                 test_match: function(match, indexed_rule) {
                   var token, lines, backup;
                   if (this.options.backtrack_lexer) {
@@ -7912,6 +7995,7 @@ var require_jsonpath = __commonJS({
                   }
                   return false;
                 },
+                // return next match in input
                 next: function() {
                   if (this.done) {
                     return this.EOF;
@@ -7962,6 +8046,7 @@ var require_jsonpath = __commonJS({
                     });
                   }
                 },
+                // return next match that has a token
                 lex: function lex() {
                   var r = this.next();
                   if (r) {
@@ -7970,9 +8055,11 @@ var require_jsonpath = __commonJS({
                     return this.lex();
                   }
                 },
+                // activates a new lexer condition state (pushes the new lexer condition state onto the condition stack)
                 begin: function begin(condition) {
                   this.conditionStack.push(condition);
                 },
+                // pop the previously active lexer condition state off the condition stack
                 popState: function popState() {
                   var n = this.conditionStack.length - 1;
                   if (n > 0) {
@@ -7981,6 +8068,7 @@ var require_jsonpath = __commonJS({
                     return this.conditionStack[0];
                   }
                 },
+                // produce the lexer rule set which is active for the currently active lexer condition state
                 _currentRules: function _currentRules() {
                   if (this.conditionStack.length && this.conditionStack[this.conditionStack.length - 1]) {
                     return this.conditions[this.conditionStack[this.conditionStack.length - 1]].rules;
@@ -7988,6 +8076,7 @@ var require_jsonpath = __commonJS({
                     return this.conditions["INITIAL"].rules;
                   }
                 },
+                // return the currently active lexer condition state; when an index argument is provided it produces the N-th previous condition state, if available
                 topState: function topState(n) {
                   n = this.conditionStack.length - 1 - Math.abs(n || 0);
                   if (n >= 0) {
@@ -7996,9 +8085,11 @@ var require_jsonpath = __commonJS({
                     return "INITIAL";
                   }
                 },
+                // alias for begin(condition)
                 pushState: function pushState(condition) {
                   this.begin(condition);
                 },
+                // return the number of states currently on the stack
                 stateStackSize: function stateStackSize() {
                   return this.conditionStack.length;
                 },
@@ -8056,7 +8147,7 @@ var require_jsonpath = __commonJS({
                 conditions: { "INITIAL": { "rules": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "inclusive": true } }
               };
               return lexer2;
-            }();
+            })();
             parser2.lexer = lexer;
             function Parser() {
               this.yy = {};
@@ -8064,7 +8155,7 @@ var require_jsonpath = __commonJS({
             Parser.prototype = parser2;
             parser2.Parser = Parser;
             return new Parser();
-          }();
+          })();
           if (typeof require2 !== "undefined" && typeof exports3 !== "undefined") {
             exports3.parser = parser;
             exports3.Parser = parser.Parser;
@@ -8197,6 +8288,96 @@ var require_jsonpath = __commonJS({
         var slice = require2("./slice");
         var _evaluate = require2("static-eval");
         var _uniq = require2("underscore").uniq;
+        var UNSAFE_PROPERTY_NAMES = /* @__PURE__ */ Object.create(null);
+        UNSAFE_PROPERTY_NAMES["constructor"] = true;
+        UNSAFE_PROPERTY_NAMES["__proto__"] = true;
+        UNSAFE_PROPERTY_NAMES["prototype"] = true;
+        function isUnsafePropertyName(name) {
+          return typeof name === "string" && UNSAFE_PROPERTY_NAMES[name] === true;
+        }
+        function isSafeAst(ast) {
+          if (!ast || typeof ast !== "object") return false;
+          function walk(node) {
+            if (!node || typeof node !== "object" || !node.type) {
+              return false;
+            }
+            switch (node.type) {
+              // ===== SAFE TERMINALS =====
+              case "Literal":
+                return true;
+              case "Identifier":
+                return node.name === "@";
+              // ===== PROPERTY ACCESS =====
+              case "MemberExpression": {
+                if (!walk(node.object)) {
+                  return false;
+                }
+                if (!node.computed && node.property.type === "Identifier") {
+                  if (isUnsafePropertyName(node.property.name)) {
+                    return false;
+                  }
+                  return true;
+                }
+                if (node.computed) {
+                  if (!walk(node.property)) {
+                    return false;
+                  }
+                  if (node.property.type === "Literal" && isUnsafePropertyName(String(node.property.value))) {
+                    return false;
+                  }
+                  return true;
+                }
+                return false;
+              }
+              // ===== EXPRESSIONS =====
+              case "UnaryExpression":
+                return walk(node.argument);
+              case "BinaryExpression":
+              case "LogicalExpression":
+                return walk(node.left) && walk(node.right);
+              case "ConditionalExpression":
+                return walk(node.test) && walk(node.consequent) && walk(node.alternate);
+              case "ArrayExpression":
+                for (var i = 0; i < node.elements.length; i++) {
+                  if (!walk(node.elements[i])) {
+                    return false;
+                  }
+                }
+                return true;
+              case "ObjectExpression":
+                for (var j = 0; j < node.properties.length; j++) {
+                  var prop = node.properties[j];
+                  if (prop.key && (prop.key.type === "Identifier" && isUnsafePropertyName(prop.key.name) || prop.key.type === "Literal" && isUnsafePropertyName(String(prop.key.value)))) {
+                    return false;
+                  }
+                  if (!walk(prop.value)) {
+                    return false;
+                  }
+                }
+                return true;
+              // ===== EXPLICITLY REJECT DANGEROUS TYPES =====
+              // Security: do not rely on default deny; list each code-execution / escape vector.
+              case "CallExpression":
+              case "NewExpression":
+              case "FunctionExpression":
+              case "ArrowFunctionExpression":
+              case "ThisExpression":
+              case "AssignmentExpression":
+              case "UpdateExpression":
+              case "SequenceExpression":
+              case "TemplateLiteral":
+              case "TemplateElement":
+              case "TaggedTemplateExpression":
+              case "ReturnStatement":
+              case "ExpressionStatement":
+                return false;
+              // ===== DEFAULT DENY =====
+              default:
+                return false;
+            }
+          }
+          return walk(ast);
+        }
         var Handlers = function() {
           return this.initialize.apply(this, arguments);
         };
@@ -8208,8 +8389,7 @@ var require_jsonpath = __commonJS({
         Handlers.prototype.resolve = function(component) {
           var key = [component.operation, component.scope, component.expression.type].join("-");
           var method = this._fns[key];
-          if (!method)
-            throw new Error("couldn't resolve key: " + key);
+          if (!method) throw new Error("couldn't resolve key: " + key);
           return method.bind(this);
         };
         Handlers.prototype.register = function(key, handler) {
@@ -8277,8 +8457,7 @@ var require_jsonpath = __commonJS({
             var results = [];
             var nodes = jp.nodes(partial, "$..*").slice(1);
             nodes.forEach(function(node) {
-              if (results.length >= count)
-                return;
+              if (results.length >= count) return;
               component.expression.value.forEach(function(component2) {
                 var _component = { operation: "subscript", scope: "child", expression: component2.expression };
                 var handler = self2.resolve(_component);
@@ -8392,9 +8571,12 @@ var require_jsonpath = __commonJS({
             return this.traverse(partial, component.expression.value, passable, count);
           };
         }
-        function evaluate() {
+        function evaluate(ast, scope) {
+          if (!isSafeAst(ast)) {
+            throw new Error("Unsafe expression: script and filter expressions may only access the current node (@) with safe property names");
+          }
           try {
-            return _evaluate.apply(this, arguments);
+            return _evaluate(ast, scope);
           } catch (e) {
           }
         }
@@ -8436,6 +8618,7 @@ var require_jsonpath = __commonJS({
           assert.ok(obj instanceof Object, "obj needs to be an object");
           assert.ok(string, "we need a path");
           var node = this.nodes(obj, string)[0];
+          if (node) this._assert_safe_path_keys(node.path);
           var key = node.path.pop();
           return this.value(obj, node.path);
         };
@@ -8447,6 +8630,7 @@ var require_jsonpath = __commonJS({
             return b.path.length - a.path.length;
           });
           nodes.forEach(function(node) {
+            this._assert_safe_path_keys(node.path);
             var key = node.path.pop();
             var parent = this.value(obj, this.stringify(node.path));
             var val = node.value = fn.call(obj, parent[key]);
@@ -8459,8 +8643,8 @@ var require_jsonpath = __commonJS({
           assert.ok(path, "we need a path");
           if (arguments.length >= 3) {
             var node = this.nodes(obj, path).shift();
-            if (!node)
-              return this._vivify(obj, path, value);
+            if (!node) return this._vivify(obj, path, value);
+            this._assert_safe_path_keys(node.path);
             var key = node.path.slice(-1).shift();
             var parent = this.parent(obj, this.stringify(node.path));
             parent[key] = value;
@@ -8474,6 +8658,7 @@ var require_jsonpath = __commonJS({
           var path = this.parser.parse(string).map(function(component) {
             return component.expression.value;
           });
+          this._assert_safe_path_keys(path);
           var setValue = function(path2, value2) {
             var key = path2.pop();
             var node = self2.value(obj, path2);
@@ -8481,6 +8666,7 @@ var require_jsonpath = __commonJS({
               setValue(path2.concat(), typeof key === "string" ? {} : []);
               node = self2.value(obj, path2);
             }
+            self2._assert_safe_key(key);
             node[key] = value2;
           };
           setValue(path, value);
@@ -8505,24 +8691,20 @@ var require_jsonpath = __commonJS({
         JSONPath.prototype.nodes = function(obj, string, count) {
           assert.ok(obj instanceof Object, "obj needs to be an object");
           assert.ok(string, "we need a path");
-          if (count === 0)
-            return [];
+          if (count === 0) return [];
           var path = this.parser.parse(string);
+          this._assert_safe_components(path);
           var handlers = this.handlers;
           var partials = [{ path: ["$"], value: obj }];
           var matches = [];
-          if (path.length && path[0].expression.type == "root")
-            path.shift();
-          if (!path.length)
-            return partials;
+          if (path.length && path[0].expression.type == "root") path.shift();
+          if (!path.length) return partials;
           path.forEach(function(component, index) {
-            if (matches.length >= count)
-              return;
+            if (matches.length >= count) return;
             var handler = handlers.resolve(component);
             var _partials = [];
             partials.forEach(function(p) {
-              if (matches.length >= count)
-                return;
+              if (matches.length >= count) return;
               var results = handler(component, p, count);
               if (index == path.length - 1) {
                 matches = matches.concat(results || []);
@@ -8545,8 +8727,7 @@ var require_jsonpath = __commonJS({
           };
           path = this._normalize(path);
           path.forEach(function(component) {
-            if (component.expression.type == "root")
-              return;
+            if (component.expression.type == "root") return;
             var key = [component.scope, component.operation].join("-");
             var template = templates[key];
             var value;
@@ -8555,8 +8736,7 @@ var require_jsonpath = __commonJS({
             } else {
               value = component.expression.value;
             }
-            if (!template)
-              throw new Error("couldn't find template " + key);
+            if (!template) throw new Error("couldn't find template " + key);
             string += template.replace(/{{value}}/, value);
           });
           return string;
@@ -8568,9 +8748,9 @@ var require_jsonpath = __commonJS({
           } else if (Array.isArray(path) && typeof path[0] == "string") {
             var _path = [{ expression: { type: "root", value: "$" } }];
             path.forEach(function(component, index) {
-              if (component == "$" && index === 0)
-                return;
+              if (component == "$" && index === 0) return;
               if (typeof component == "string" && component.match("^" + dict.identifier + "$")) {
+                this._assert_safe_key(component);
                 _path.push({
                   operation: "member",
                   scope: "child",
@@ -8578,21 +8758,60 @@ var require_jsonpath = __commonJS({
                 });
               } else {
                 var type = typeof component == "number" ? "numeric_literal" : "string_literal";
+                if (type === "string_literal") this._assert_safe_key(component);
                 _path.push({
                   operation: "subscript",
                   scope: "child",
                   expression: { value: component, type }
                 });
               }
-            });
+            }, this);
             return _path;
           } else if (Array.isArray(path) && typeof path[0] == "object") {
             return path;
           }
           throw new Error("couldn't understand path " + path);
         };
+        JSONPath.prototype._assert_safe_key = function(key) {
+          if (_is_unsafe_key(key)) {
+            throw new Error("Unsafe key in JSONPath: " + key);
+          }
+        };
+        JSONPath.prototype._assert_safe_path_keys = function(path) {
+          if (!Array.isArray(path)) return;
+          path.forEach(function(key) {
+            if (key === "$") return;
+            if (typeof key === "string") this._assert_safe_key(key);
+          }, this);
+        };
+        JSONPath.prototype._assert_safe_components = function(components) {
+          var self2 = this;
+          if (!Array.isArray(components)) return;
+          var checkExpression = function(expression) {
+            if (!expression) return;
+            if (expression.type === "identifier" || expression.type === "string_literal") {
+              self2._assert_safe_key(expression.value);
+              return;
+            }
+            if (expression.type === "union" && Array.isArray(expression.value)) {
+              expression.value.forEach(function(component) {
+                if (component && component.expression) {
+                  checkExpression(component.expression);
+                }
+              });
+            }
+          };
+          components.forEach(function(component) {
+            if (component && component.expression) {
+              checkExpression(component.expression);
+            }
+          });
+        };
         function _is_string(obj) {
           return Object.prototype.toString.call(obj) == "[object String]";
+        }
+        function _is_unsafe_key(key) {
+          return key === "__proto__" || key === "prototype" || key === "constructor";
         }
         JSONPath.Handlers = Handlers;
         JSONPath.Parser = Parser;
@@ -8617,15 +8836,11 @@ var require_jsonpath = __commonJS({
         module4.exports = Parser;
       }, { "../generated/parser": 1, "./grammar": 3 }], 7: [function(require2, module4, exports3) {
         module4.exports = function(arr, start, end, step) {
-          if (typeof start == "string")
-            throw new Error("start cannot be a string");
-          if (typeof end == "string")
-            throw new Error("end cannot be a string");
-          if (typeof step == "string")
-            throw new Error("step cannot be a string");
+          if (typeof start == "string") throw new Error("start cannot be a string");
+          if (typeof end == "string") throw new Error("end cannot be a string");
+          if (typeof step == "string") throw new Error("step cannot be a string");
           var len = arr.length;
-          if (step === 0)
-            throw new Error("step cannot be zero");
+          if (step === 0) throw new Error("step cannot be zero");
           step = step ? integer(step) : 1;
           start = start < 0 ? len + start : start;
           end = end < 0 ? len + end : end;
@@ -8633,14 +8848,11 @@ var require_jsonpath = __commonJS({
           end = integer(end === 0 ? 0 : !end ? step > 0 ? len : -1 : end);
           start = step > 0 ? Math.max(0, start) : Math.min(len, start);
           end = step > 0 ? Math.min(end, len) : Math.max(-1, end);
-          if (step > 0 && end <= start)
-            return [];
-          if (step < 0 && start <= end)
-            return [];
+          if (step > 0 && end <= start) return [];
+          if (step < 0 && start <= end) return [];
           var result = [];
           for (var i = start; i != end; i += step) {
-            if (step < 0 && i <= end || step > 0 && i >= end)
-              break;
+            if (step < 0 && i <= end || step > 0 && i >= end) break;
             result.push(arr[i]);
           }
           return result;
@@ -8716,13 +8928,11 @@ var require_jsonpath = __commonJS({
         }
         assert.fail = fail;
         function ok(value, message) {
-          if (!value)
-            fail(value, true, message, "==", assert.ok);
+          if (!value) fail(value, true, message, "==", assert.ok);
         }
         assert.ok = ok;
         assert.equal = function equal(actual, expected, message) {
-          if (actual != expected)
-            fail(actual, expected, message, "==", assert.equal);
+          if (actual != expected) fail(actual, expected, message, "==", assert.equal);
         };
         assert.notEqual = function notEqual(actual, expected, message) {
           if (actual == expected) {
@@ -8738,11 +8948,9 @@ var require_jsonpath = __commonJS({
           if (actual === expected) {
             return true;
           } else if (util.isBuffer(actual) && util.isBuffer(expected)) {
-            if (actual.length != expected.length)
-              return false;
+            if (actual.length != expected.length) return false;
             for (var i = 0; i < actual.length; i++) {
-              if (actual[i] !== expected[i])
-                return false;
+              if (actual[i] !== expected[i]) return false;
             }
             return true;
           } else if (util.isDate(actual) && util.isDate(expected)) {
@@ -8761,8 +8969,7 @@ var require_jsonpath = __commonJS({
         function objEquiv(a, b) {
           if (util.isNullOrUndefined(a) || util.isNullOrUndefined(b))
             return false;
-          if (a.prototype !== b.prototype)
-            return false;
+          if (a.prototype !== b.prototype) return false;
           if (util.isPrimitive(a) || util.isPrimitive(b)) {
             return a === b;
           }
@@ -8785,8 +8992,7 @@ var require_jsonpath = __commonJS({
           }
           for (i = ka.length - 1; i >= 0; i--) {
             key = ka[i];
-            if (!_deepEqual(a[key], b[key]))
-              return false;
+            if (!_deepEqual(a[key], b[key])) return false;
           }
           return true;
         }
@@ -8854,8 +9060,7 @@ var require_jsonpath = __commonJS({
         var objectKeys = Object.keys || function(obj) {
           var keys = [];
           for (var key in obj) {
-            if (hasOwn.call(obj, key))
-              keys.push(key);
+            if (hasOwn.call(obj, key)) keys.push(key);
           }
           return keys;
         };
@@ -8901,10 +9106,8 @@ var require_jsonpath = __commonJS({
             var args = arguments;
             var len = args.length;
             var str = String(f).replace(formatRegExp, function(x2) {
-              if (x2 === "%%")
-                return "%";
-              if (i >= len)
-                return x2;
+              if (x2 === "%%") return "%";
+              if (i >= len) return x2;
               switch (x2) {
                 case "%s":
                   return String(args[i++]);
@@ -8979,25 +9182,18 @@ var require_jsonpath = __commonJS({
               seen: [],
               stylize: stylizeNoColor
             };
-            if (arguments.length >= 3)
-              ctx.depth = arguments[2];
-            if (arguments.length >= 4)
-              ctx.colors = arguments[3];
+            if (arguments.length >= 3) ctx.depth = arguments[2];
+            if (arguments.length >= 4) ctx.colors = arguments[3];
             if (isBoolean(opts)) {
               ctx.showHidden = opts;
             } else if (opts) {
               exports3._extend(ctx, opts);
             }
-            if (isUndefined(ctx.showHidden))
-              ctx.showHidden = false;
-            if (isUndefined(ctx.depth))
-              ctx.depth = 2;
-            if (isUndefined(ctx.colors))
-              ctx.colors = false;
-            if (isUndefined(ctx.customInspect))
-              ctx.customInspect = true;
-            if (ctx.colors)
-              ctx.stylize = stylizeWithColor;
+            if (isUndefined(ctx.showHidden)) ctx.showHidden = false;
+            if (isUndefined(ctx.depth)) ctx.depth = 2;
+            if (isUndefined(ctx.colors)) ctx.colors = false;
+            if (isUndefined(ctx.customInspect)) ctx.customInspect = true;
+            if (ctx.colors) ctx.stylize = stylizeWithColor;
             return formatValue(ctx, obj, ctx.depth);
           }
           exports3.inspect = inspect;
@@ -9024,6 +9220,7 @@ var require_jsonpath = __commonJS({
             "null": "bold",
             "string": "green",
             "date": "magenta",
+            // "name": intentionally not styling
             "regexp": "red"
           };
           function stylizeWithColor(str, styleType) {
@@ -9045,7 +9242,9 @@ var require_jsonpath = __commonJS({
             return hash;
           }
           function formatValue(ctx, value, recurseTimes) {
-            if (ctx.customInspect && value && isFunction(value.inspect) && value.inspect !== exports3.inspect && !(value.constructor && value.constructor.prototype === value)) {
+            if (ctx.customInspect && value && isFunction(value.inspect) && // Filter out the util module, it's inspect function is special
+            value.inspect !== exports3.inspect && // Also filter out any prototype objects using the circular check.
+            !(value.constructor && value.constructor.prototype === value)) {
               var ret = value.inspect(recurseTimes, ctx);
               if (!isString(ret)) {
                 ret = formatValue(ctx, ret, recurseTimes);
@@ -9224,8 +9423,7 @@ var require_jsonpath = __commonJS({
             var numLinesEst = 0;
             var length = output.reduce(function(prev, cur) {
               numLinesEst++;
-              if (cur.indexOf("\n") >= 0)
-                numLinesEst++;
+              if (cur.indexOf("\n") >= 0) numLinesEst++;
               return prev + cur.replace(/\u001b\[\d\d?m/g, "").length + 1;
             }, 0);
             if (length > 60) {
@@ -9286,7 +9484,8 @@ var require_jsonpath = __commonJS({
           }
           exports3.isFunction = isFunction;
           function isPrimitive(arg) {
-            return arg === null || typeof arg === "boolean" || typeof arg === "number" || typeof arg === "string" || typeof arg === "symbol" || typeof arg === "undefined";
+            return arg === null || typeof arg === "boolean" || typeof arg === "number" || typeof arg === "string" || typeof arg === "symbol" || // ES6 symbol
+            typeof arg === "undefined";
           }
           exports3.isPrimitive = isPrimitive;
           exports3.isBuffer = require2("./support/isBuffer");
@@ -9311,7 +9510,7 @@ var require_jsonpath = __commonJS({
             "Dec"
           ];
           function timestamp() {
-            var d = new Date();
+            var d = /* @__PURE__ */ new Date();
             var time = [
               pad(d.getHours()),
               pad(d.getMinutes()),
@@ -9324,8 +9523,7 @@ var require_jsonpath = __commonJS({
           };
           exports3.inherits = require2("inherits");
           exports3._extend = function(origin, add) {
-            if (!add || !isObject2(add))
-              return origin;
+            if (!add || !isObject2(add)) return origin;
             var keys = Object.keys(add);
             var i = keys.length;
             while (i--) {
@@ -9409,16 +9607,13 @@ var require_jsonpath = __commonJS({
             function trim(arr) {
               var start = 0;
               for (; start < arr.length; start++) {
-                if (arr[start] !== "")
-                  break;
+                if (arr[start] !== "") break;
               }
               var end = arr.length - 1;
               for (; end >= 0; end--) {
-                if (arr[end] !== "")
-                  break;
+                if (arr[end] !== "") break;
               }
-              if (start > end)
-                return [];
+              if (start > end) return [];
               return arr.slice(start, end - start + 1);
             }
             var fromParts = trim(from.split("/"));
@@ -9441,10 +9636,8 @@ var require_jsonpath = __commonJS({
           exports3.sep = "/";
           exports3.delimiter = ":";
           exports3.dirname = function(path) {
-            if (typeof path !== "string")
-              path = path + "";
-            if (path.length === 0)
-              return ".";
+            if (typeof path !== "string") path = path + "";
+            if (path.length === 0) return ".";
             var code = path.charCodeAt(0);
             var hasRoot = code === 47;
             var end = -1;
@@ -9460,16 +9653,14 @@ var require_jsonpath = __commonJS({
                 matchedSlash = false;
               }
             }
-            if (end === -1)
-              return hasRoot ? "/" : ".";
+            if (end === -1) return hasRoot ? "/" : ".";
             if (hasRoot && end === 1) {
               return "/";
             }
             return path.slice(0, end);
           };
           function basename(path) {
-            if (typeof path !== "string")
-              path = path + "";
+            if (typeof path !== "string") path = path + "";
             var start = 0;
             var end = -1;
             var matchedSlash = true;
@@ -9485,8 +9676,7 @@ var require_jsonpath = __commonJS({
                 end = i + 1;
               }
             }
-            if (end === -1)
-              return "";
+            if (end === -1) return "";
             return path.slice(start, end);
           }
           exports3.basename = function(path, ext) {
@@ -9497,8 +9687,7 @@ var require_jsonpath = __commonJS({
             return f;
           };
           exports3.extname = function(path) {
-            if (typeof path !== "string")
-              path = path + "";
+            if (typeof path !== "string") path = path + "";
             var startDot = -1;
             var startPart = 0;
             var end = -1;
@@ -9526,26 +9715,25 @@ var require_jsonpath = __commonJS({
                 preDotState = -1;
               }
             }
-            if (startDot === -1 || end === -1 || preDotState === 0 || preDotState === 1 && startDot === end - 1 && startDot === startPart + 1) {
+            if (startDot === -1 || end === -1 || // We saw a non-dot character immediately before the dot
+            preDotState === 0 || // The (right-most) trimmed path component is exactly '..'
+            preDotState === 1 && startDot === end - 1 && startDot === startPart + 1) {
               return "";
             }
             return path.slice(startDot, end);
           };
           function filter(xs, f) {
-            if (xs.filter)
-              return xs.filter(f);
+            if (xs.filter) return xs.filter(f);
             var res = [];
             for (var i = 0; i < xs.length; i++) {
-              if (f(xs[i], i, xs))
-                res.push(xs[i]);
+              if (f(xs[i], i, xs)) res.push(xs[i]);
             }
             return res;
           }
           var substr = "ab".substr(-1) === "b" ? function(str, start, len) {
             return str.substr(start, len);
           } : function(str, start, len) {
-            if (start < 0)
-              start = str.length + start;
+            if (start < 0) start = str.length + start;
             return str.substr(start, len);
           };
         }).call(this, require2("_process"));
@@ -9708,30 +9896,26 @@ var require_jsonpath = __commonJS({
         };
       }, {}], 15: [function(require2, module4, exports3) {
         var unparse = require2("escodegen").generate;
-        module4.exports = function(ast, vars) {
-          if (!vars)
-            vars = {};
+        module4.exports = function(ast, vars, opts) {
+          if (!opts) opts = {};
+          var rejectAccessToMethodsOnFunctions = !opts.allowAccessToMethodsOnFunctions;
+          if (!vars) vars = {};
           var FAIL = {};
-          var result = function walk(node, scopeVars) {
+          var result = (function walk(node, noExecute) {
             if (node.type === "Literal") {
               return node.value;
             } else if (node.type === "UnaryExpression") {
-              var val = walk(node.argument);
-              if (node.operator === "+")
-                return +val;
-              if (node.operator === "-")
-                return -val;
-              if (node.operator === "~")
-                return ~val;
-              if (node.operator === "!")
-                return !val;
+              var val = walk(node.argument, noExecute);
+              if (node.operator === "+") return +val;
+              if (node.operator === "-") return -val;
+              if (node.operator === "~") return ~val;
+              if (node.operator === "!") return !val;
               return FAIL;
             } else if (node.type === "ArrayExpression") {
               var xs = [];
               for (var i = 0, l = node.elements.length; i < l; i++) {
-                var x = walk(node.elements[i]);
-                if (x === FAIL)
-                  return FAIL;
+                var x = walk(node.elements[i], noExecute);
+                if (x === FAIL) return FAIL;
                 xs.push(x);
               }
               return xs;
@@ -9739,108 +9923,96 @@ var require_jsonpath = __commonJS({
               var obj = {};
               for (var i = 0; i < node.properties.length; i++) {
                 var prop = node.properties[i];
-                var value = prop.value === null ? prop.value : walk(prop.value);
-                if (value === FAIL)
-                  return FAIL;
+                var value = prop.value === null ? prop.value : walk(prop.value, noExecute);
+                if (value === FAIL) return FAIL;
                 obj[prop.key.value || prop.key.name] = value;
               }
               return obj;
             } else if (node.type === "BinaryExpression" || node.type === "LogicalExpression") {
-              var l = walk(node.left);
-              if (l === FAIL)
-                return FAIL;
-              var r = walk(node.right);
-              if (r === FAIL)
-                return FAIL;
               var op = node.operator;
-              if (op === "==")
-                return l == r;
-              if (op === "===")
-                return l === r;
-              if (op === "!=")
-                return l != r;
-              if (op === "!==")
-                return l !== r;
-              if (op === "+")
-                return l + r;
-              if (op === "-")
-                return l - r;
-              if (op === "*")
-                return l * r;
-              if (op === "/")
-                return l / r;
-              if (op === "%")
-                return l % r;
-              if (op === "<")
-                return l < r;
-              if (op === "<=")
-                return l <= r;
-              if (op === ">")
-                return l > r;
-              if (op === ">=")
-                return l >= r;
-              if (op === "|")
-                return l | r;
-              if (op === "&")
-                return l & r;
-              if (op === "^")
-                return l ^ r;
-              if (op === "&&")
-                return l && r;
-              if (op === "||")
-                return l || r;
+              if (op === "&&") {
+                var l = walk(node.left);
+                if (l === FAIL) return FAIL;
+                if (!l) return l;
+                var r = walk(node.right);
+                if (r === FAIL) return FAIL;
+                return r;
+              } else if (op === "||") {
+                var l = walk(node.left);
+                if (l === FAIL) return FAIL;
+                if (l) return l;
+                var r = walk(node.right);
+                if (r === FAIL) return FAIL;
+                return r;
+              }
+              var l = walk(node.left, noExecute);
+              if (l === FAIL) return FAIL;
+              var r = walk(node.right, noExecute);
+              if (r === FAIL) return FAIL;
+              if (op === "==") return l == r;
+              if (op === "===") return l === r;
+              if (op === "!=") return l != r;
+              if (op === "!==") return l !== r;
+              if (op === "+") return l + r;
+              if (op === "-") return l - r;
+              if (op === "*") return l * r;
+              if (op === "/") return l / r;
+              if (op === "%") return l % r;
+              if (op === "<") return l < r;
+              if (op === "<=") return l <= r;
+              if (op === ">") return l > r;
+              if (op === ">=") return l >= r;
+              if (op === "|") return l | r;
+              if (op === "&") return l & r;
+              if (op === "^") return l ^ r;
               return FAIL;
             } else if (node.type === "Identifier") {
               if ({}.hasOwnProperty.call(vars, node.name)) {
                 return vars[node.name];
-              } else
-                return FAIL;
+              } else return FAIL;
             } else if (node.type === "ThisExpression") {
               if ({}.hasOwnProperty.call(vars, "this")) {
                 return vars["this"];
-              } else
-                return FAIL;
+              } else return FAIL;
             } else if (node.type === "CallExpression") {
-              var callee = walk(node.callee);
-              if (callee === FAIL)
-                return FAIL;
-              if (typeof callee !== "function")
-                return FAIL;
-              var ctx = node.callee.object ? walk(node.callee.object) : FAIL;
-              if (ctx === FAIL)
-                ctx = null;
+              var callee = walk(node.callee, noExecute);
+              if (callee === FAIL) return FAIL;
+              if (typeof callee !== "function") return FAIL;
+              var ctx = node.callee.object ? walk(node.callee.object, noExecute) : FAIL;
+              if (ctx === FAIL) ctx = null;
               var args = [];
               for (var i = 0, l = node.arguments.length; i < l; i++) {
-                var x = walk(node.arguments[i]);
-                if (x === FAIL)
-                  return FAIL;
+                var x = walk(node.arguments[i], noExecute);
+                if (x === FAIL) return FAIL;
                 args.push(x);
+              }
+              if (noExecute) {
+                return void 0;
               }
               return callee.apply(ctx, args);
             } else if (node.type === "MemberExpression") {
-              var obj = walk(node.object);
-              if (obj === FAIL || typeof obj == "function") {
+              var obj = walk(node.object, noExecute);
+              if (obj === FAIL || typeof obj == "function" && rejectAccessToMethodsOnFunctions) {
                 return FAIL;
               }
-              if (node.property.type === "Identifier") {
+              if (node.property.type === "Identifier" && !node.computed) {
+                if (isUnsafeProperty(node.property.name)) return FAIL;
                 return obj[node.property.name];
               }
-              var prop = walk(node.property);
-              if (prop === FAIL)
-                return FAIL;
+              var prop = walk(node.property, noExecute);
+              if (prop === null || prop === FAIL) return FAIL;
+              if (isUnsafeProperty(prop)) return FAIL;
               return obj[prop];
             } else if (node.type === "ConditionalExpression") {
-              var val = walk(node.test);
-              if (val === FAIL)
-                return FAIL;
-              return val ? walk(node.consequent) : walk(node.alternate);
+              var val = walk(node.test, noExecute);
+              if (val === FAIL) return FAIL;
+              return val ? walk(node.consequent) : walk(node.alternate, noExecute);
             } else if (node.type === "ExpressionStatement") {
-              var val = walk(node.expression);
-              if (val === FAIL)
-                return FAIL;
+              var val = walk(node.expression, noExecute);
+              if (val === FAIL) return FAIL;
               return val;
             } else if (node.type === "ReturnStatement") {
-              return walk(node.argument);
+              return walk(node.argument, noExecute);
             } else if (node.type === "FunctionExpression") {
               var bodies = node.body.body;
               var oldVars = {};
@@ -9851,11 +10023,10 @@ var require_jsonpath = __commonJS({
                 var key = node.params[i];
                 if (key.type == "Identifier") {
                   vars[key.name] = null;
-                } else
-                  return FAIL;
+                } else return FAIL;
               }
               for (var i in bodies) {
-                if (walk(bodies[i]) === FAIL) {
+                if (walk(bodies[i], true) === FAIL) {
                   return FAIL;
                 }
               }
@@ -9868,24 +10039,26 @@ var require_jsonpath = __commonJS({
             } else if (node.type === "TemplateLiteral") {
               var str = "";
               for (var i = 0; i < node.expressions.length; i++) {
-                str += walk(node.quasis[i]);
-                str += walk(node.expressions[i]);
+                str += walk(node.quasis[i], noExecute);
+                str += walk(node.expressions[i], noExecute);
               }
-              str += walk(node.quasis[i]);
+              str += walk(node.quasis[i], noExecute);
               return str;
             } else if (node.type === "TaggedTemplateExpression") {
-              var tag = walk(node.tag);
+              var tag = walk(node.tag, noExecute);
               var quasi = node.quasi;
               var strings = quasi.quasis.map(walk);
               var values = quasi.expressions.map(walk);
               return tag.apply(null, [strings].concat(values));
             } else if (node.type === "TemplateElement") {
               return node.value.cooked;
-            } else
-              return FAIL;
-          }(ast);
+            } else return FAIL;
+          })(ast);
           return result === FAIL ? void 0 : result;
         };
+        function isUnsafeProperty(name) {
+          return name === "constructor" || name === "__proto__";
+        }
       }, { "escodegen": 12 }], "jsonpath": [function(require2, module4, exports3) {
         module4.exports = require2("./lib/index");
       }, { "./lib/index": 5 }] }, {}, ["jsonpath"])("jsonpath");
@@ -9981,10 +10154,12 @@ var SEARCH_COLUMNS_DESCRIPTION = {
   ["AGGREGATE_TIME_ORIGINAL_ESTIMATE" /* AGGREGATE_TIME_ORIGINAL_ESTIMATE */]: "#\u{1F551}Original Estimate",
   ["AGGREGATE_TIME_SPENT" /* AGGREGATE_TIME_SPENT */]: "#\u{1F551}Spent",
   ["FIX_VERSIONS" /* FIX_VERSIONS */]: "Fix Versions",
+  // [ESearchColumnsTypes.LINKS]: 'Links', // TODO
   ["LABELS" /* LABELS */]: "Labels",
   ["COMPONENTS" /* COMPONENTS */]: "Components",
   ["LAST_VIEWED" /* LAST_VIEWED */]: "Last Viewed",
   ["PROGRESS" /* PROGRESS */]: "Progress",
+  // [ESearchColumnsTypes.SUBTASKS]: 'Subtasks', // TODO
   ["TIME_ESTIMATE" /* TIME_ESTIMATE */]: "\u{1F551}Estimate",
   ["TIME_ORIGINAL_ESTIMATE" /* TIME_ORIGINAL_ESTIMATE */]: "\u{1F551}Original Estimate",
   ["TIME_SPENT" /* TIME_SPENT */]: "\u{1F551}Spent",
@@ -10165,7 +10340,7 @@ var jiraClient_default = {
   },
   async getSearchResults(query2, options = {}) {
     const opt = {
-      fields: options.fields || ["id", "key", "summary", "status", "assignee", "reporter", "issuetype", "priority", "created", "updated", "project"],
+      fields: options.fields || ["id", "key", "summary", "status", "assignee", "reporter", "issuetype", "priority", "created", "updated", "project", "duedate", "resolution", "resolutiondate", "labels", "components", "fixVersions", "environment", "lastViewed", "progress", "aggregateprogress", "timeestimate", "timeoriginalestimate", "timespent", "aggregatetimeestimate", "aggregatetimeoriginalestimate", "aggregatetimespent"],
       offset: options.offset || 0,
       limit: options.limit || 50,
       account: options.account || null
@@ -10231,6 +10406,25 @@ var jiraClient_default = {
       }
     }
   },
+  // async updateJQLAutoCompleteCache(): Promise<void> {
+  // const response = await sendRequest(
+  //     {
+  //         method: 'GET',
+  //         path: `/jql/autocompletedata`,
+  //     }
+  // ) as IJiraAutocompleteData
+  // settingData.cache.jqlAutocomplete = { fields: [], functions: {} }
+  // for (const functionData of response.visibleFunctionNames) {
+  //     for (const functionType of functionData.types) {
+  //         if (functionType in settingData.cache.jqlAutocomplete.functions) {
+  //             settingData.cache.jqlAutocomplete.functions[functionType].push(functionData.value)
+  //         } else {
+  //             settingData.cache.jqlAutocomplete.functions[functionType] = [functionData.value]
+  //         }
+  //     }
+  // }
+  // settingData.cache.jqlAutocomplete.fields = response.visibleFieldNames
+  // },
   async getJQLAutoCompleteField(fieldName, fieldValue) {
     const queryParameters = new URLSearchParams({
       fieldName,
@@ -10466,6 +10660,7 @@ var JiraIssueSettingTab = class extends import_obsidian2.PluginSettingTab {
   }
   async saveSettings() {
     const settingsToStore = Object.assign({}, SettingsData, {
+      // Global cache settings cleanup
       cache: DEFAULT_SETTINGS.cache,
       jqlAutocomplete: null,
       customFieldsIdToName: null,
@@ -10553,8 +10748,7 @@ var JiraIssueSettingTab = class extends import_obsidian2.PluginSettingTab {
     }));
   }
   displayModifyAccountPage(prevAccount, newAccount = null) {
-    if (!newAccount)
-      newAccount = Object.assign({}, prevAccount);
+    if (!newAccount) newAccount = Object.assign({}, prevAccount);
     const { containerEl } = this;
     containerEl.empty();
     containerEl.createEl("h3", { text: "Modify account" });
@@ -10610,15 +10804,13 @@ var JiraIssueSettingTab = class extends import_obsidian2.PluginSettingTab {
     const colorInput = new import_obsidian2.Setting(containerEl).setName("Color band").setDesc("Color of the tags border. Use colors in hexadecimal notation (Example: #000000).").addText((text) => {
       text.setPlaceholder("Example: #000000").setValue(newAccount.color).onChange(async (value) => {
         newAccount.color = value.replace(/[^#0-9A-Fa-f]/g, "");
-        if (newAccount.color[0] != "#")
-          newAccount.color = "#" + newAccount.color;
+        if (newAccount.color[0] != "#") newAccount.color = "#" + newAccount.color;
         colorInput.setAttr("style", "border-left: 5px solid " + newAccount.color);
       });
       colorTextComponent = text;
     }).addExtraButton((button) => button.setIcon("dice").setTooltip("New random color").onClick(async () => {
       newAccount.color = getRandomHexColor();
-      if (colorTextComponent != null)
-        colorTextComponent.setValue(newAccount.color);
+      if (colorTextComponent != null) colorTextComponent.setValue(newAccount.color);
       colorInput.setAttr("style", "border-left: 5px solid " + newAccount.color);
     })).controlEl.children[0];
     colorInput.setAttr("style", "border-left: 5px solid " + newAccount.color);
@@ -10768,8 +10960,7 @@ var JiraIssueSettingTab = class extends import_obsidian2.PluginSettingTab {
     SettingsData.accounts.sort((a, b) => a.priority - b.priority);
     let priority = 1;
     for (const account of SettingsData.accounts) {
-      while (aliases.indexOf(account.alias) >= 0)
-        account.alias += "1";
+      while (aliases.indexOf(account.alias) >= 0) account.alias += "1";
       aliases.push(account.alias);
       account.priority = priority;
       priority++;
@@ -10861,8 +11052,7 @@ var ColumnsSuggest = class extends import_obsidian3.EditorSuggest {
     query2 = query2.replace(new RegExp(`^${COMPACT_SYMBOL}`), "");
     if (!query2.startsWith("$")) {
       for (const column of Object.values(ESearchColumnsTypes)) {
-        if (suggestions.length >= this.limit)
-          break;
+        if (suggestions.length >= this.limit) break;
         if (column.startsWith(query2) && column !== "CUSTOM_FIELD" /* CUSTOM_FIELD */) {
           suggestions.push({
             name: column,
@@ -10874,8 +11064,7 @@ var ColumnsSuggest = class extends import_obsidian3.EditorSuggest {
     }
     query2 = query2.replace(/^\$/, "");
     for (const column of SettingsData.cache.columns) {
-      if (suggestions.length >= this.limit)
-        break;
+      if (suggestions.length >= this.limit) break;
       if (column.toUpperCase().startsWith(query2)) {
         suggestions.push({
           name: column,
@@ -10896,8 +11085,7 @@ var ColumnsSuggest = class extends import_obsidian3.EditorSuggest {
     el.createSpan({ text: value.name, cls: "jira-issue-suggestion" });
   }
   selectSuggestion(value, evt) {
-    if (!this.context)
-      return;
+    if (!this.context) return;
     const selectedColumn = " " + (value.isCompact ? COMPACT_SYMBOL : "") + (value.isCustomField ? "$" : "") + value.name + ", ";
     this.context.editor.replaceRange(selectedColumn, this.context.start, this.context.end, "jira-issue");
   }
@@ -11031,7 +11219,7 @@ var renderingCommon_default = {
 };
 
 // src/searchView.ts
-var SearchView = class {
+var SearchView = class _SearchView {
   constructor() {
     this.type = "TABLE" /* TABLE */;
     this.query = "";
@@ -11042,7 +11230,7 @@ var SearchView = class {
     this._cacheKey = null;
   }
   static fromString(str) {
-    const sv = new SearchView();
+    const sv = new _SearchView();
     const lines = str.split("\n").filter((line) => line.trim() && !COMMENT_REGEX.test(line));
     for (const line of lines) {
       const [key, ...values] = line.split(":");
@@ -11363,8 +11551,7 @@ function isObject(item) {
   return item && typeof item === "object" && !Array.isArray(item);
 }
 function mergeDeep(target, ...sources) {
-  if (!sources.length)
-    return target;
+  if (!sources.length) return target;
   const source = sources.shift();
   if (isObject(target) && isObject(source)) {
     for (const key in source) {
@@ -12131,8 +12318,7 @@ var QuerySuggest = class extends import_obsidian8.EditorSuggest {
     el.createSpan({ text: value.name, cls: "jira-issue-suggestion" });
   }
   selectSuggestion(value, evt) {
-    if (!this.context)
-      return;
+    if (!this.context) return;
     this.context.editor.replaceRange(value.name, this.context.start, this.context.end, "jira-issue");
   }
 };
@@ -12471,3 +12657,15 @@ var JiraIssuePlugin = class extends import_obsidian10.Plugin {
     window.$ji = api_default;
   }
 };
+/*! Bundled license information:
+
+moment/moment.js:
+  (*! moment.js *)
+  (*! version : 2.30.1 *)
+  (*! authors : Tim Wood, Iskren Chernev, Moment.js contributors *)
+  (*! license : MIT *)
+  (*! momentjs.com *)
+
+jsonpath/jsonpath.js:
+  (*! jsonpath 1.3.0 *)
+*/

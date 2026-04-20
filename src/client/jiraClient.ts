@@ -199,7 +199,7 @@ export default {
 
     async getSearchResults(query: string, options: { limit?: number, offset?: number, fields?: string[], account?: IJiraIssueAccountSettings } = {}): Promise<IJiraSearchResults> {
         const opt = {
-            fields: options.fields || ['id', 'key', 'summary', 'status', 'assignee', 'reporter', 'issuetype', 'priority', 'created', 'updated', 'project'],
+            fields: options.fields || ['id', 'key', 'summary', 'status', 'assignee', 'reporter', 'issuetype', 'priority', 'created', 'updated', 'project', 'duedate', 'resolution', 'resolutiondate', 'labels', 'components', 'fixVersions', 'environment', 'lastViewed', 'progress', 'aggregateprogress', 'timeestimate', 'timeoriginalestimate', 'timespent', 'aggregatetimeestimate', 'aggregatetimeoriginalestimate', 'aggregatetimespent'],
             offset: options.offset || 0,
             limit: options.limit || 50,
             account: options.account || null,
